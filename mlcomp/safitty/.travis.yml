@@ -1,0 +1,39 @@
+group: travis_latest
+language: python
+cache: pip
+python:
+  - 3.6
+
+stages:
+  - Codestyle
+  - Test
+  - Deploy
+
+install: &requirements
+  pip install -r requirements.txt
+
+jobs:
+  include:
+  - stage: Codestyle
+    install: pip install flake8
+    script:
+      - flake8 . --count --ignore=E126,E226,E704,E731,W503,W504,F405 --max-complexity=16
+        --show-source --statistics --max-line-length=120
+
+  - stage: Test
+    install:
+      - *requirements
+      - pip install pytest
+    script:
+      - py.test tests/
+
+  - stage: Deploy
+    name: "Pypi"
+    script: true
+    deploy:
+      provider: pypi
+      user: $PYPI_USER
+      password: $PYPI_PASS
+      skip_cleanup: true
+      skip_existing: true
+      distributions: sdist bdist_wheel
