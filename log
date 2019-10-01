@@ -1,0 +1,22 @@
+# effnetB0 V100 lr=5e-4
+Starting epoch: 19 | phase: train | ⏰: 15:13:36
+Loss: 0.0082 | IoU: 0.4950 | dice: 0.7730 | dice_neg: 0.9684 | dice_pos: 0.5963
+Starting epoch: 19 | phase: val | ⏰: 15:24:45
+Loss: 0.0076 | IoU: 0.5140 | dice: 0.7875 | dice_neg: 0.9647 | dice_pos: 0.6055
+******** New optimal found, saving state ********
+
+# effnetB3 V100 lr=5e-4 bs=8
+Starting epoch: 49 | phase: train | ⏰: 05:00:47
+Gradient overflow.  Skipping step, loss scaler 0 reducing loss scale to 8388608.0
+Loss: 0.0053 | IoU: 0.6344 | dice: 0.8493 | dice_neg: 0.9667 | dice_pos: 0.7412
+Starting epoch: 49 | phase: val | ⏰: 05:13:41
+Loss: 0.0057 | IoU: 0.6507 | dice: 0.8637 | dice_neg: 0.9100 | dice_pos: 0.7352
+******** New optimal found, saving state ********
+
+# effnetB5 V100 lr=5e-4, bs=(6,4) (train:14.9G
+Starting epoch: 46 | phase: train | ⏰: 22:43:08
+Loss: 0.0055 | IoU: 0.6354 | dice: 0.8503 | dice_neg: 0.9502 | dice_pos: 0.7354
+Starting epoch: 46 | phase: val | ⏰: 22:59:00
+Loss: 0.0058 | IoU: 0.6429 | dice: 0.8611 | dice_neg: 0.8365 | dice_pos: 0.6792
+******** New optimal found, saving state ********
+
