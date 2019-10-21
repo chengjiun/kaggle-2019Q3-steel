@@ -2,8 +2,8 @@
 # coding: utf-8
 
 # ## UNet starter for Steel defect detection challenge
-# 
-# 
+#
+#
 # This kernel uses a UNet model with pretrained resnet18 encoder for this challenge, with simple augmentations using albumentations library, uses BCE loss, metrics like Dice and IoU. I've used [segmentation_models.pytorch](https://github.com/qubvel/segmentation_models.pytorch) which comes with a lot pre-implemented segmentation architectures. This is a modified version of my previous [kernel](https://www.kaggle.com/rishabhiitbhu/unet-with-resnet34-encoder-pytorch) for [siim-acr-pneumothorax-segmentation](https://www.kaggle.com/c/siim-acr-pneumothorax-segmentation/) competition.
 
 # **As internet is not allowed for this competition, I tried installing `segmentation_models.pytorch` by source using pip but due to some reasons it didn't work. So, as a [Jugaad](https://en.wikipedia.org/wiki/Jugaad) I took all of `segmentation_models.pytorch`'s UNet code and wrote it in a single file and added it as a dataset so as to use it for this kernel, its dependency [pretrained-models.pytorch](https://github.com/Cadene/pretrained-models.pytorch) is also added as a dataset.
@@ -46,7 +46,7 @@ import torch.optim as optim
 import torch.backends.cudnn as cudnn
 from torch.utils.data import DataLoader, Dataset, sampler
 from matplotlib import pyplot as plt
-from albumentations import (HorizontalFlip, ShiftScaleRotate, RamdomBrightnessContrast,
+from albumentations import (HorizontalFlip, ShiftScaleRotate, RandomBrightnessContrast,
                             VerticalFlip, Normalize, Resize, Compose, GaussNoise)
 from albumentations.torch import ToTensor
 warnings.filterwarnings("ignore")
@@ -133,8 +133,8 @@ def get_transforms(phase, mean, std):
                     VerticalFlip(p=0.5)], p=1.0),
                 RandomBrightnessContrast(brightness_limit=0.05, contrast_limit=0.1, p=0.7),
                 # ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.1, rotate_limit=20, p=0.5),
-                GaussNoise(var_limit=5, p=0.5)
-                # 
+                # GaussNoise(var_limit=5, p=0.5)
+                #
             ]
         )
     list_transforms.extend(
@@ -163,7 +163,7 @@ def provider(
     df['ClassId'] = df['ClassId'].astype(int)
     df = df.pivot(index='ImageId',columns='ClassId',values='EncodedPixels')
     df['defects'] = df.count(axis=1)
-    
+
     train_df, val_df = train_test_split(df, test_size=0.2, stratify=df["defects"])
     df = train_df if phase == "train" else val_df
     image_dataset = SteelDataset(df, data_folder, mean, std, phase)
@@ -172,14 +172,14 @@ def provider(
         batch_size=batch_size,
         num_workers=num_workers,
         pin_memory=True,
-        shuffle=True,   
+        shuffle=True,
     )
 
     return dataloader
 
 
 # ## Some more utility functions
-# 
+#
 # Dice and IoU metric implementations, metric logger for training and validation.
 
 # In[6]:
@@ -311,7 +311,7 @@ b3unet = get_efficientunet_b3(out_channels=4, concat_input=True, pretrained=True
 from apex import amp
 class Trainer(object):
     '''This class takes care of training and validation of our model'''
-    def __init__(self, model, params_dict, 
+    def __init__(self, model, params_dict,
                  chkpt_name='../DATA/kaggle_2019Q3_steel/steel_resnet18.pth'):
         self.params_dict = params_dict
         self.num_workers = params_dict.get('num_workers', 6)
@@ -327,9 +327,9 @@ class Trainer(object):
         self.chkpt_name = chkpt_name
         self.criterion = torch.nn.BCEWithLogitsLoss()
         self.optimizer = optim.Adam(self.net.parameters(), lr=self.lr)
-        self.scheduler = ReduceLROnPlateau(self.optimizer, mode="min", min_lr=1e-7, 
+        self.scheduler = ReduceLROnPlateau(self.optimizer, mode="min", min_lr=1e-7,
                                            patience=params_dict.get('reduced_lr_patience', 3), verbose=True)
-            
+
         self.net = self.net.to(self.device)
         if params_dict.get('mixed_precision', '') is not '':
             self.net, self.optimizer = amp.initialize(
@@ -350,7 +350,7 @@ class Trainer(object):
         self.losses = {phase: [] for phase in self.phases}
         self.iou_scores = {phase: [] for phase in self.phases}
         self.dice_scores = {phase: [] for phase in self.phases}
-        
+
     def forward(self, images, targets):
         images = images.to(self.device)
         masks = targets.to(self.device)
@@ -414,7 +414,7 @@ class Trainer(object):
                 print("******** New optimal found, saving state ********")
                 state["best_loss"] = self.best_loss = val_loss
                 self._save(chkpt_name)
-            
+
             print()
 
 
@@ -422,7 +422,7 @@ class Trainer(object):
 
 
 from pathlib import Path
-DATA_BASE_PATH = Path('../DATA/kaggle-2019Q3-steel/') 
+DATA_BASE_PATH = Path('../DATA/kaggle-2019Q3-steel/')
 sample_submission_path = str(DATA_BASE_PATH / 'sample_submission.csv')
 train_df_path = str(DATA_BASE_PATH / 'train.csv')
 data_folder = str(DATA_BASE_PATH)
@@ -437,9 +437,9 @@ test_data_folder = str(DATA_BASE_PATH / "test_images")
 # b0effnet - batch train 12 (O1) 11.132GB
 # b3effnet - batch train 8 (O1) V100
 
-params_dict= {'batch_size': {'train': 8, 'val': 4}, 
-              'num_workers': 8, 
-              'accumulation_steps': 32, 
+params_dict= {'batch_size': {'train': 6, 'val': 3},
+              'num_workers': 6,
+              'accumulation_steps': 64,
               'lr': 5e-4,
               'num_epochs': 100,
               'reduced_lr_patience':2,
@@ -461,12 +461,12 @@ model_trainer.start()
 # I've used resnet-18 architecture in this kernel. It scores ~0.89 on LB. Try to play around with other architectures of `segmenation_models.pytorch` and see what works best for you, let me know in the comments :) and do upvote if you liked this kernel, I need some medals too. 😬
 
 # ## Refrences:
-# 
+#
 # Few kernels from which I've borrowed some cod[](http://)e:
-# 
+#
 # * https://www.kaggle.com/amanooo/defect-detection-starter-u-net
 # * https://www.kaggle.com/go1dfish/clear-mask-visualization-and-simple-eda
-# 
+#
 # A big thank you to all those who share their code on Kaggle, I'm nobody without you guys. I've learnt a lot from fellow kagglers, special shout-out to [@Abhishek](https://www.kaggle.com/abhishek), [@Yury](https://www.kaggle.com/deyury), [@Heng](https://www.kaggle.com/hengck23), [@Ekhtiar](https://www.kaggle.com/ekhtiar), [@lafoss](https://www.kaggle.com/iafoss), [@Siddhartha](https://www.kaggle.com/meaninglesslives), [@xhulu](https://www.kaggle.com/xhlulu), and the list goes on..
 
 # In[ ]:
